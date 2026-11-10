@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Найкраща Кава{% endblock %} — кав'ярня у Дніпрі</title>
+  <meta name="description" content="{% block description %}Кав'ярня «Найкраща Кава» у Дніпрі: меню з цінами онлайн та бронювання столиків.{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Перейти до вмісту</a>
+
+  {% block header %}
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="logo" href="{{ url_for('index') }}">
+        <span class="logo__mark" aria-hidden="true"></span>
+        <span>Найкраща Кава</span>
+      </a>
+
+      <nav class="main-nav" id="main-nav" aria-label="Головне меню">
+        {% set nav = [('index', 'Головна'), ('menu', 'Меню'), ('booking', 'Бронювання')] %}
+        <ul class="main-nav__list">
+          {% for endpoint, label in nav %}
+          <li><a class="main-nav__link{% if request.endpoint == endpoint or (endpoint == 'menu' and request.endpoint == 'menu_item') %} is-active{% endif %}"
+                 href="{{ url_for(endpoint) }}"
+                 {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a></li>
+          {% endfor %}
+          <li><a class="main-nav__link" href="#contacts">Контакти</a></li>
+        </ul>
+        <a class="btn btn--outline btn--sm main-nav__login" href="{{ url_for('account') }}">Увійти</a>
+      </nav>
+
+      <button class="burger" type="button" aria-label="Відкрити меню" aria-expanded="false" aria-controls="main-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  {% endblock %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="container flashes">
+    {% for category, message in messages %}
+    <p class="flash flash--{{ category }}" role="status">{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="site-footer" id="contacts">
+    <div class="container">
+      <div class="site-footer__grid">
+        <div>
+          <a class="logo" href="{{ url_for('index') }}">
+            <span class="logo__mark" aria-hidden="true"></span>
+            <span>Найкраща Кава</span>
+          </a>
+          <p class="site-footer__muted">Кав'ярня у Дніпрі</p>
+        </div>
+        <div>
+          <h2 class="site-footer__title">Адреса</h2>
+          <address>просп. Яворницького, 52, Дніпро</address>
+        </div>
+        <div>
+          <h2 class="site-footer__title">Графік</h2>
+          <p>Пн–Нд, 08:00–21:00</p>
+          <h2 class="site-footer__title site-footer__title--gap">Телефон</h2>
+          <p><a href="tel:+380560000000">+380 (56) 000-00-00</a></p>
+        </div>
+        <div>
+          <h2 class="site-footer__title">Навігація</h2>
+          <ul class="site-footer__links">
+            <li><a href="{{ url_for('index') }}">Головна</a></li>
+            <li><a href="{{ url_for('menu') }}">Меню</a></li>
+            <li><a href="{{ url_for('booking') }}">Бронювання</a></li>
+            <li><a href="{{ url_for('account') }}">Увійти</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="site-footer__bottom">
+        <p>© {{ current_year }} Найкраща Кава. Курсовий проєкт, розробник: Ілля Шелковський, гр. ПР-24 1/9</p>
+        <a href="https://github.com/Nagri4/CoffeeShopWeb" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+  {% endblock %}
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>

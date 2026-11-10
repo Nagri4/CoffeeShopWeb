@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import photo, menu_card with context %}
+{% block title %}{{ item.name }}{% endblock %}
+{% block description %}{{ item.name }} — {{ item.description }}. {{ item.price }} ₴.{% endblock %}
+
+{% block content %}
+<section class="section section--top">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Хлібні крихти">
+      <a href="{{ url_for('menu') }}">Меню</a> /
+      <a href="{{ url_for('menu', category=category.slug) }}">{{ category.name }}</a> /
+      <span aria-current="page">{{ item.name }}</span>
+    </nav>
+
+    <div class="item">
+      {{ photo('img/menu/' ~ item.image, item.name, 'item__photo') }}
+      <div class="item__info">
+        <p class="eyebrow">{{ category.name }}</p>
+        <div class="item__title-row">
+          <h1 class="item__title">{{ item.name }}</h1>
+          {% if item.label %}<span class="tag">{{ item.label }}</span>{% endif %}
+        </div>
+        <p class="price price--lg">{{ item.price }} ₴ <small>{{ item.volume }}</small></p>
+        <p class="item__text">{{ item.details }}</p>
+        <dl class="specs">
+          <div><dt>Порція</dt><dd>{{ item.volume }}</dd></div>
+          <div><dt>Категорія</dt><dd>{{ category.name }}</dd></div>
+          <div><dt>Калорійність</dt><dd>{{ item.calories }}</dd></div>
+        </dl>
+        {% if item.is_available %}
+        <p class="stock stock--yes">В наявності</p>
+        {% else %}
+        <p class="stock stock--no">Тимчасово немає</p>
+        {% endif %}
+        <div class="item__actions">
+          <a class="btn" href="{{ url_for('booking') }}">Забронювати столик</a>
+          <a class="btn btn--outline" href="{{ url_for('menu') }}">← Назад до меню</a>
+        </div>
+      </div>
+    </div>
+
+    {% if similar %}
+    <h2 class="section__title section__title--sm">Схожі позиції</h2>
+    <div class="cards">
+      {% for s in similar %}{{ menu_card(s, compact=true) }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

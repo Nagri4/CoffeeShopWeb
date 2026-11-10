@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Бронювання{% endblock %}
+
+{% macro error(field) -%}
+<p class="field__error" id="{{ field }}-error" {% if not errors[field] %}hidden{% endif %}>{{ errors[field] }}</p>
+{%- endmacro %}
+
+{% block content %}
+<section class="section section--top">
+  <div class="container booking">
+    <div class="booking__intro">
+      <p class="eyebrow">Бронювання</p>
+      <h1 class="section__title">Забронюйте столик</h1>
+      <p class="lead">Оберіть дату, час і кількість гостей — ми підтвердимо бронювання протягом 15 хвилин.</p>
+      <ul class="checklist">
+        <li>Бронювання безкоштовне</li>
+        <li>Столик тримаємо 15 хвилин</li>
+        <li>Скасувати можна в особистому кабінеті</li>
+      </ul>
+    </div>
+
+    <form class="panel form" id="booking-form" action="{{ url_for('booking') }}" method="post" novalidate>
+      <div class="form__grid">
+        <div class="field{% if errors.name %} has-error{% endif %}">
+          <label for="name">Ім'я</label>
+          <input id="name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="50"
+                 value="{{ values.name }}" aria-describedby="name-error">
+          {{ error('name') }}
+        </div>
+        <div class="field{% if errors.phone %} has-error{% endif %}">
+          <label for="phone">Телефон</label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="+380XXXXXXXXX"
+                 pattern="\+380\d{9}" value="{{ values.phone }}" aria-describedby="phone-error">
+          {{ error('phone') }}
+        </div>
+        <div class="field{% if errors.date %} has-error{% endif %}">
+          <label for="date">Дата</label>
+          <input id="date" name="date" type="date" required min="{{ today }}" value="{{ values.date }}" aria-describedby="date-error">
+          {{ error('date') }}
+        </div>
+        <div class="field{% if errors.time %} has-error{% endif %}">
+          <label for="time">Час</label>
+          <select id="time" name="time" required aria-describedby="time-error">
+            <option value="">Оберіть час</option>
+            {% for t in times %}<option value="{{ t }}"{% if values.time == t %} selected{% endif %}>{{ t }}</option>{% endfor %}
+          </select>
+          {{ error('time') }}
+        </div>
+        <div class="field{% if errors.guests %} has-error{% endif %}">
+          <label for="guests">Кількість гостей</label>
+          <div class="stepper">
+            <button type="button" class="stepper__btn" data-step="-1" aria-label="Менше гостей">−</button>
+            <input id="guests" name="guests" type="number" min="1" max="10" required value="{{ values.guests }}" aria-describedby="guests-error">
+            <button type="button" class="stepper__btn" data-step="1" aria-label="Більше гостей">+</button>
+          </div>
+          {{ error('guests') }}
+        </div>
+        <div class="field field--full{% if errors.comment %} has-error{% endif %}">
+          <label for="comment">Коментар</label>
+          <textarea id="comment" name="comment" rows="3" maxlength="300" placeholder="Ваші побажання до бронювання"
+                    aria-describedby="comment-error">{{ values.comment }}</textarea>
+          {{ error('comment') }}
+        </div>
+      </div>
+      <button class="btn btn--block" type="submit">Забронювати</button>
+      <p class="form__note">Натискаючи кнопку, ви погоджуєтесь з умовами обробки даних</p>
+    </form>
+  </div>
+</section>
+{% endblock %}

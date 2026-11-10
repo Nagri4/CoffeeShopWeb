@@ -1,0 +1,26 @@
+{# Фото з кольоровою заглушкою: якщо файлу немає, видно фон-градієнт #}
+{% macro photo(src, alt, cls='') -%}
+<div class="photo {{ cls }}">
+  <img src="{{ url_for('static', filename=src) }}" alt="{{ alt }}" loading="lazy">
+</div>
+{%- endmacro %}
+
+{# Картка позиції меню (компонент «Картка меню» з Figma) #}
+{% macro menu_card(item, compact=false) -%}
+{% set category = get_category(item.category_id) %}
+<article class="card{% if compact %} card--compact{% endif %}{% if not item.is_available %} card--off{% endif %}">
+  <a class="card__link" href="{{ url_for('menu_item', item_id=item.id) }}">
+    {{ photo('img/menu/' ~ item.image, item.name, 'card__photo') }}
+    <div class="card__body">
+      {% if not compact %}<p class="eyebrow">{{ category.name }}</p>{% endif %}
+      <h3 class="card__title">{{ item.name }}</h3>
+      {% if not compact %}<p class="card__text">{{ item.description }}</p>{% endif %}
+      <div class="card__footer">
+        <p class="price">{{ item.price }} ₴ <small>{{ item.volume }}</small></p>
+        {% if not item.is_available %}<span class="tag tag--muted">Немає</span>
+        {% elif item.label and not compact %}<span class="tag">{{ item.label }}</span>{% endif %}
+      </div>
+    </div>
+  </a>
+</article>
+{%- endmacro %}

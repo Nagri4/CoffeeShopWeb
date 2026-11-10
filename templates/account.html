@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Акаунт{% endblock %}
+
+{% set statuses = {
+  'confirmed': ('Підтверджено', 'ok'),
+  'pending': ('Очікує', 'wait'),
+  'done': ('Завершено', 'muted'),
+  'cancelled': ('Скасовано', 'bad')
+} %}
+
+{% block content %}
+<section class="section section--top">
+  <div class="container account">
+    <div class="panel auth">
+      <div class="auth__tabs" role="tablist">
+        <button class="auth__tab is-active" type="button" role="tab" aria-selected="true" aria-controls="login-panel" id="login-tab">Вхід</button>
+        <button class="auth__tab" type="button" role="tab" aria-selected="false" aria-controls="register-panel" id="register-tab">Реєстрація</button>
+      </div>
+
+      <form class="form" id="login-panel" role="tabpanel" aria-labelledby="login-tab"
+            action="{{ url_for('account') }}" method="post" novalidate data-validate>
+        <input type="hidden" name="action" value="login">
+        <div class="field">
+          <label for="login-email">Електронна пошта</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" required aria-describedby="login-email-error">
+          <p class="field__error" id="login-email-error" hidden></p>
+        </div>
+        <div class="field">
+          <label for="login-password">Пароль</label>
+          <div class="password">
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="6" aria-describedby="login-password-error">
+            <button type="button" class="password__toggle" aria-label="Показати пароль" data-toggle-password></button>
+          </div>
+          <p class="field__error" id="login-password-error" hidden></p>
+        </div>
+        <div class="form__row">
+          <label class="check"><input type="checkbox" name="remember"> Запам'ятати мене</label>
+          <a class="link" href="#">Забули пароль?</a>
+        </div>
+        <button class="btn btn--block" type="submit">Увійти</button>
+      </form>
+
+      <form class="form" id="register-panel" role="tabpanel" aria-labelledby="register-tab" hidden
+            action="{{ url_for('account') }}" method="post" novalidate data-validate>
+        <input type="hidden" name="action" value="register">
+        <div class="field">
+          <label for="reg-name">Ім'я</label>
+          <input id="reg-name" name="name" type="text" autocomplete="name" required minlength="2" aria-describedby="reg-name-error">
+          <p class="field__error" id="reg-name-error" hidden></p>
+        </div>
+        <div class="field">
+          <label for="reg-email">Електронна пошта</label>
+          <input id="reg-email" name="email" type="email" autocomplete="email" required aria-describedby="reg-email-error">
+          <p class="field__error" id="reg-email-error" hidden></p>
+        </div>
+        <div class="field">
+          <label for="reg-password">Пароль (мінімум 6 символів)</label>
+          <input id="reg-password" name="password" type="password" autocomplete="new-password" required minlength="6" aria-describedby="reg-password-error">
+          <p class="field__error" id="reg-password-error" hidden></p>
+        </div>
+        <button class="btn btn--block" type="submit">Зареєструватися</button>
+      </form>
+    </div>
+
+    <div class="account__main">
+      <p class="eyebrow">Особистий кабінет</p>
+      <h1 class="section__title">Мої бронювання</h1>
+      <p class="section__sub">Вітаємо, Олено! Тут ваші поточні та минулі бронювання.</p>
+
+      <div class="panel table-wrap">
+        <table class="table table--stack">
+          <thead>
+            <tr><th>Дата</th><th>Час</th><th>Гостей</th><th>Коментар</th><th>Статус</th><th><span class="visually-hidden">Дії</span></th></tr>
+          </thead>
+          <tbody>
+            {% for r in reservations %}
+            {% set st = statuses[r.status] %}
+            <tr>
+              <td data-label="Дата">{{ r.date }}</td>
+              <td data-label="Час">{{ r.time }}</td>
+              <td data-label="Гостей">{{ r.guests }}</td>
+              <td data-label="Коментар" class="muted">{{ r.comment or '—' }}</td>
+              <td data-label="Статус"><span class="badge badge--{{ st[1] }}">{{ st[0] }}</span></td>
+              <td class="table__actions">
+                {% if r.status in ['confirmed', 'pending'] %}
+                <button class="btn btn--outline btn--sm" type="button">Скасувати</button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="btn" href="{{ url_for('booking') }}">+ Нове бронювання</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

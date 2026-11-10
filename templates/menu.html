@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import menu_card with context %}
+{% block title %}Меню{% endblock %}
+
+{% block content %}
+<section class="section section--top">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <p class="eyebrow">Меню</p>
+        <h1 class="section__title">Що сьогодні в чашці</h1>
+        <p class="section__sub">Асортимент і ціни завантажуються з бази даних і оновлюються адміністратором</p>
+      </div>
+      <form class="search" action="{{ url_for('menu') }}" method="get" role="search">
+        {% if active_slug %}<input type="hidden" name="category" value="{{ active_slug }}">{% endif %}
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <label class="visually-hidden" for="q">Пошук у меню</label>
+        <input class="search__input" type="search" id="q" name="q" value="{{ query }}" placeholder="Пошук у меню">
+      </form>
+    </div>
+
+    <div class="toolbar">
+      <nav class="tabs" aria-label="Категорії меню">
+        <a class="tab{% if not active_slug %} is-active{% endif %}"
+           href="{{ url_for('menu', sort=sort, q=query or None) }}">Усі <span>{{ total }}</span></a>
+        {% for c in categories %}
+        <a class="tab{% if active_slug == c.slug %} is-active{% endif %}"
+           href="{{ url_for('menu', category=c.slug, sort=sort, q=query or None) }}">{{ c.name }} <span>{{ counts[c.id] }}</span></a>
+        {% endfor %}
+      </nav>
+
+      <form class="sort" action="{{ url_for('menu') }}" method="get">
+        {% if active_slug %}<input type="hidden" name="category" value="{{ active_slug }}">{% endif %}
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+        <label for="sort">Сортувати:</label>
+        <select id="sort" name="sort" class="sort__select" data-autosubmit>
+          {% for key, label in sort_options.items() %}
+          <option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <noscript><button class="btn btn--sm" type="submit">OK</button></noscript>
+      </form>
+    </div>
+
+    {% if items %}
+    <div class="cards">
+      {% for item in items %}{{ menu_card(item) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">Нічого не знайдено. <a href="{{ url_for('menu') }}">Скинути фільтри</a></p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

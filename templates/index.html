@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import photo, menu_card with context %}
+{% block title %}Головна{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <p class="eyebrow">Кав'ярня у Дніпрі</p>
+      <h1 class="hero__title">Кава. Затишок.<br> Нічого зайвого.</h1>
+      <p class="lead">Вітаємо в «Найкращій Каві». Свіже обсмаження, домашня випічка і тиха пауза серед міського дня. Перегляньте меню онлайн або забронюйте столик за хвилину.</p>
+      <div class="hero__actions">
+        <a class="btn" href="{{ url_for('booking') }}">Забронювати столик</a>
+        <a class="btn btn--outline" href="{{ url_for('menu') }}">Переглянути меню</a>
+      </div>
+      <dl class="hero__info">
+        <div><dt>Адреса</dt><dd>просп. Яворницького, 52</dd></div>
+        <div><dt>Графік</dt><dd>Пн–Нд, 08:00–21:00</dd></div>
+        <div><dt>Телефон</dt><dd><a href="tel:+380560000000">+380 (56) 000-00-00</a></dd></div>
+      </dl>
+    </div>
+    <div class="hero__media">
+      {{ photo('img/hero.jpg', 'Капучино на дерев\'яному столі', 'hero__photo') }}
+      <div class="rating">
+        <p class="rating__value">4.9 <span aria-hidden="true">★</span></p>
+        <p class="rating__text">понад 1200 відгуків гостей</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="popular-title">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <p class="eyebrow">Меню</p>
+        <h2 class="section__title" id="popular-title">Найпопулярніше</h2>
+      </div>
+      <a class="btn btn--outline btn--sm" href="{{ url_for('menu') }}">Усе меню →</a>
+    </div>
+    <div class="cards">
+      {% for item in popular %}{{ menu_card(item) }}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
