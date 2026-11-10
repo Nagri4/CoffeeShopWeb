@@ -8,14 +8,14 @@
   <div class="container">
     <nav class="breadcrumbs" aria-label="Хлібні крихти">
       <a href="{{ url_for('menu') }}">Меню</a> /
-      <a href="{{ url_for('menu', category=category.slug) }}">{{ category.name }}</a> /
+      <a href="{{ url_for('menu', category=item.category_slug) }}">{{ item.category_name }}</a> /
       <span aria-current="page">{{ item.name }}</span>
     </nav>
 
     <div class="item">
       {{ photo('img/menu/' ~ item.image, item.name, 'item__photo') }}
       <div class="item__info">
-        <p class="eyebrow">{{ category.name }}</p>
+        <p class="eyebrow">{{ item.category_name }}</p>
         <div class="item__title-row">
           <h1 class="item__title">{{ item.name }}</h1>
           {% if item.label %}<span class="tag">{{ item.label }}</span>{% endif %}
@@ -24,7 +24,7 @@
         <p class="item__text">{{ item.details }}</p>
         <dl class="specs">
           <div><dt>Порція</dt><dd>{{ item.volume }}</dd></div>
-          <div><dt>Категорія</dt><dd>{{ category.name }}</dd></div>
+          <div><dt>Категорія</dt><dd>{{ item.category_name }}</dd></div>
           <div><dt>Калорійність</dt><dd>{{ item.calories }}</dd></div>
         </dl>
         {% if item.is_available %}

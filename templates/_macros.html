@@ -7,12 +7,11 @@
 
 {# Картка позиції меню (компонент «Картка меню» з Figma) #}
 {% macro menu_card(item, compact=false) -%}
-{% set category = get_category(item.category_id) %}
 <article class="card{% if compact %} card--compact{% endif %}{% if not item.is_available %} card--off{% endif %}">
   <a class="card__link" href="{{ url_for('menu_item', item_id=item.id) }}">
     {{ photo('img/menu/' ~ item.image, item.name, 'card__photo') }}
     <div class="card__body">
-      {% if not compact %}<p class="eyebrow">{{ category.name }}</p>{% endif %}
+      {% if not compact %}<p class="eyebrow">{{ item.category_name }}</p>{% endif %}
       <h3 class="card__title">{{ item.name }}</h3>
       {% if not compact %}<p class="card__text">{{ item.description }}</p>{% endif %}
       <div class="card__footer">

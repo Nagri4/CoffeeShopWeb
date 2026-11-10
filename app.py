@@ -1,53 +1,60 @@
 """
 Найкраща Кава — веб-додаток кав'ярні (курсовий проєкт).
 
-Етап II–III: сторінки, шаблони Jinja2 та обробка форм.
-Дані поки що зберігаються у списках Python (data.py);
-на етапі IV їх буде перенесено в базу даних SQLite.
+Етап IV: дані зберігаються в базі SQLite (coffee.db).
+Читання (Read) — каталог, сторінка позиції, адмін-панель;
+створення (Create) — форма бронювання.
+Усі SQL-запити параметризовані (плейсхолдери «?») — захист від SQL-ін'єкцій.
 """
 import re
 from datetime import date, datetime
 
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
 
-from data import BOOKING_TIMES, CATEGORIES, MENU_ITEMS, MY_RESERVATIONS
+from db import close_db, execute, query
 
 app = Flask(__name__)
 app.secret_key = "change-me-in-production"  # потрібен для flash-повідомлень і сесій
+app.teardown_appcontext(close_db)
 
+BOOKING_TIMES = [f"{h:02d}:{m:02d}" for h in range(8, 21) for m in (0, 30)]
+
+# Сортування: ключ із адреси -> фрагмент ORDER BY.
+# Значення беруться лише з цього словника, тому в SQL не потрапляє введення користувача.
 SORT_OPTIONS = {
-    "popular": "За популярністю",
-    "price_asc": "Спочатку дешевші",
-    "price_desc": "Спочатку дорожчі",
-    "name": "За назвою",
+    "popular": ("За популярністю", "m.popularity DESC"),
+    "price_asc": ("Спочатку дешевші", "m.price ASC"),
+    "price_desc": ("Спочатку дорожчі", "m.price DESC"),
+    "name": ("За назвою", "m.name COLLATE NOCASE ASC"),
 }
 
-
-# ---------- допоміжні функції ----------
-
-def get_category(category_id):
-    return next((c for c in CATEGORIES if c["id"] == category_id), None)
-
-
-def get_category_by_slug(slug):
-    return next((c for c in CATEGORIES if c["slug"] == slug), None)
-
-
-def get_item(item_id):
-    return next((i for i in MENU_ITEMS if i["id"] == item_id), None)
+# Основний запит позицій меню разом із назвою категорії (JOIN)
+ITEMS_SQL = """
+    SELECT m.*, c.name AS category_name, c.slug AS category_slug
+    FROM menu_items AS m
+    JOIN categories AS c ON c.id = m.category_id
+"""
 
 
 @app.context_processor
-def inject_helpers():
-    """Робить функції доступними в усіх шаблонах."""
-    return {"get_category": get_category, "current_year": date.today().year}
+def inject_globals():
+    return {"current_year": date.today().year}
+
+
+@app.template_filter("date_ua")
+def date_ua(value):
+    """2026-12-24 -> 24.12.2026"""
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").strftime("%d.%m.%Y")
+    except (TypeError, ValueError):
+        return value
 
 
 # ---------- публічні сторінки ----------
 
 @app.route("/")
 def index():
-    popular = sorted(MENU_ITEMS, key=lambda i: i["popularity"], reverse=True)[:4]
+    popular = query(ITEMS_SQL + " ORDER BY m.popularity DESC LIMIT 4")
     return render_template("index.html", popular=popular)
 
 
@@ -55,46 +62,55 @@ def index():
 def menu():
     slug = request.args.get("category", "")
     sort = request.args.get("sort", "popular")
-    query = request.args.get("q", "").strip()
-
-    items = list(MENU_ITEMS)
-    active_category = get_category_by_slug(slug)
-    if active_category:
-        items = [i for i in items if i["category_id"] == active_category["id"]]
-    if query:
-        items = [i for i in items if query.lower() in i["name"].lower()]
-
-    if sort == "price_asc":
-        items.sort(key=lambda i: i["price"])
-    elif sort == "price_desc":
-        items.sort(key=lambda i: i["price"], reverse=True)
-    elif sort == "name":
-        items.sort(key=lambda i: i["name"])
-    else:
+    search = request.args.get("q", "").strip()
+    if sort not in SORT_OPTIONS:
         sort = "popular"
-        items.sort(key=lambda i: i["popularity"], reverse=True)
 
-    counts = {c["id"]: sum(1 for i in MENU_ITEMS if i["category_id"] == c["id"]) for c in CATEGORIES}
+    conditions, params = [], []
+    if slug:
+        conditions.append("c.slug = ?")
+        params.append(slug)
+    if search:
+        conditions.append("m.name LIKE ?")
+        params.append(f"%{search}%")
+
+    sql = ITEMS_SQL
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+    sql += " ORDER BY " + SORT_OPTIONS[sort][1]
+    items = query(sql, params)
+
+    categories = query("""
+        SELECT c.*, COUNT(m.id) AS items_count
+        FROM categories AS c
+        LEFT JOIN menu_items AS m ON m.category_id = c.id
+        GROUP BY c.id
+        ORDER BY c.sort_order
+    """)
+    total = query("SELECT COUNT(*) AS n FROM menu_items", one=True)["n"]
+
     return render_template(
         "menu.html",
         items=items,
-        categories=CATEGORIES,
-        counts=counts,
-        total=len(MENU_ITEMS),
-        active_slug=active_category["slug"] if active_category else "",
+        categories=categories,
+        total=total,
+        active_slug=slug,
         sort=sort,
-        sort_options=SORT_OPTIONS,
-        query=query,
+        sort_options={k: v[0] for k, v in SORT_OPTIONS.items()},
+        query=search,
     )
 
 
 @app.route("/menu/<int:item_id>")
 def menu_item(item_id):
-    item = get_item(item_id)
+    item = query(ITEMS_SQL + " WHERE m.id = ?", (item_id,), one=True)
     if item is None:
         abort(404)
-    similar = [i for i in MENU_ITEMS if i["category_id"] == item["category_id"] and i["id"] != item["id"]][:4]
-    return render_template("item.html", item=item, category=get_category(item["category_id"]), similar=similar)
+    similar = query(
+        ITEMS_SQL + " WHERE m.category_id = ? AND m.id != ? ORDER BY m.popularity DESC LIMIT 4",
+        (item["category_id"], item_id),
+    )
+    return render_template("item.html", item=item, similar=similar)
 
 
 def validate_booking(form):
@@ -133,8 +149,23 @@ def booking():
         values = request.form.to_dict()
         errors = validate_booking(request.form)
         if not errors:
-            # Етап IV: тут буде INSERT у таблицю reservations
-            flash(f"Дякуємо, {values['name'].strip()}! Бронювання на {values['date']} о {values['time']} прийнято.", "success")
+            execute(
+                """INSERT INTO reservations (name, phone, date, time, guests, comment)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    values["name"].strip(),
+                    values["phone"].strip().replace(" ", ""),
+                    values["date"],
+                    values["time"],
+                    int(values["guests"]),
+                    values.get("comment", "").strip(),
+                ),
+            )
+            flash(
+                f"Дякуємо, {values['name'].strip()}! Бронювання на {date_ua(values['date'])} "
+                f"о {values['time']} прийнято. Ми зателефонуємо для підтвердження.",
+                "success",
+            )
             return redirect(url_for("booking"))
     return render_template(
         "booking.html", values=values, errors=errors, times=BOOKING_TIMES, today=date.today().isoformat()
@@ -145,25 +176,31 @@ def booking():
 def account():
     if request.method == "POST":
         # Етап V: перевірка пароля через check_password_hash і запис у session
-        flash("Вхід і реєстрація запрацюють після підключення бази даних.", "info")
+        flash("Вхід і реєстрація запрацюють на наступному етапі.", "info")
         return redirect(url_for("account"))
-    return render_template("account.html", reservations=MY_RESERVATIONS)
+    # Поки немає входу, показуємо бронювання демо-користувача (id = 2, Олена)
+    reservations = query(
+        "SELECT * FROM reservations WHERE user_id = ? ORDER BY date DESC, time DESC", (2,)
+    )
+    return render_template("account.html", reservations=reservations)
 
 
 # ---------- панель адміністратора ----------
 
 @app.route("/admin")
 def admin():
-    return render_template("admin.html", items=MENU_ITEMS, categories=CATEGORIES)
+    items = query(ITEMS_SQL + " ORDER BY c.sort_order, m.name")
+    categories = query("SELECT * FROM categories ORDER BY sort_order")
+    return render_template("admin.html", items=items, categories=categories)
 
 
 @app.route("/admin/menu/<int:item_id>/delete", methods=["POST"])
 def admin_delete(item_id):
-    item = get_item(item_id)
+    item = query("SELECT name FROM menu_items WHERE id = ?", (item_id,), one=True)
     if item is None:
         abort(404)
-    # Етап V: тут буде DELETE FROM menu_items WHERE id = ?
-    flash(f"Позицію «{item['name']}» буде видалено після підключення бази даних.", "info")
+    # Етап V: тут буде DELETE FROM menu_items WHERE id = ? (після входу адміністратора)
+    flash(f"Видалення «{item['name']}» запрацює на наступному етапі.", "info")
     return redirect(url_for("admin"))
 
 

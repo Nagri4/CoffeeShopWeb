@@ -25,7 +25,7 @@
            href="{{ url_for('menu', sort=sort, q=query or None) }}">Усі <span>{{ total }}</span></a>
         {% for c in categories %}
         <a class="tab{% if active_slug == c.slug %} is-active{% endif %}"
-           href="{{ url_for('menu', category=c.slug, sort=sort, q=query or None) }}">{{ c.name }} <span>{{ counts[c.id] }}</span></a>
+           href="{{ url_for('menu', category=c.slug, sort=sort, q=query or None) }}">{{ c.name }} <span>{{ c.items_count }}</span></a>
         {% endfor %}
       </nav>
 

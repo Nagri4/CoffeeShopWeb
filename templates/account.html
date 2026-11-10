@@ -76,7 +76,7 @@
             {% for r in reservations %}
             {% set st = statuses[r.status] %}
             <tr>
-              <td data-label="Дата">{{ r.date }}</td>
+              <td data-label="Дата">{{ r.date|date_ua }}</td>
               <td data-label="Час">{{ r.time }}</td>
               <td data-label="Гостей">{{ r.guests }}</td>
               <td data-label="Коментар" class="muted">{{ r.comment or '—' }}</td>

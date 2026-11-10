@@ -1,6 +1,6 @@
 """
-Тимчасові дані (заглушки). На етапі IV ці списки замінить база даних SQLite
-з таблицями categories, menu_items, users та reservations.
+Початкові дані для бази. Використовуються лише в init_db.py,
+щоб заповнити таблиці categories і menu_items при створенні бази.
 """
 
 CATEGORIES = [
@@ -61,12 +61,4 @@ MENU_ITEMS = [
      "details": "Запечена гранола з горіхами, грецький йогурт і свіжі ягоди.",
      "price": 125, "volume": "250 г", "calories": "380 ккал", "label": "", "image": "granola.jpg",
      "is_available": True, "popularity": 40},
-]
-
-BOOKING_TIMES = [f"{h:02d}:{m:02d}" for h in range(8, 21) for m in (0, 30)]
-
-MY_RESERVATIONS = [
-    {"date": "24.10.2026", "time": "18:30", "guests": 2, "comment": "Біля вікна", "status": "confirmed"},
-    {"date": "31.10.2026", "time": "10:00", "guests": 4, "comment": "", "status": "pending"},
-    {"date": "12.10.2026", "time": "19:00", "guests": 2, "comment": "", "status": "done"},
 ]

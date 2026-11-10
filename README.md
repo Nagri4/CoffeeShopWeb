@@ -3,7 +3,7 @@
 Курсовий проєкт з дисципліни «WEB-технології та WEB-дизайн».
 Веб-сайт кав'ярні з онлайн-меню, сторінками позицій, бронюванням столиків, особистим кабінетом і панеллю адміністратора.
 
-**Технології:** Python 3, Flask, Jinja2, HTML5, CSS3 (Grid, Flexbox), JavaScript (ES6+). Далі — SQLite.
+**Технології:** Python 3, Flask, Jinja2, SQLite, HTML5, CSS3 (Grid, Flexbox), JavaScript (ES6+).
 
 ## Запуск локально
 
@@ -15,6 +15,7 @@ venv\Scripts\activate
 source venv/bin/activate
 
 pip install -r requirements.txt
+python init_db.py   # створює базу coffee.db (лише перший раз)
 python app.py
 ```
 
@@ -35,7 +36,10 @@ python app.py
 
 ```
 app.py            маршрути Flask
-data.py           тимчасові дані (буде замінено на SQLite)
+db.py             підключення до SQLite і допоміжні функції запитів
+schema.sql        структура бази даних (4 таблиці)
+init_db.py        створення бази та початкові дані
+data.py           початкове меню для init_db.py
 templates/        шаблони Jinja2 (base.html + сторінки)
 static/css/       стилі
 static/js/        клієнтські скрипти
@@ -47,6 +51,19 @@ static/img/       зображення
 - [x] I. Аналіз і макет у Figma
 - [x] II. Адаптивна верстка HTML/CSS/JS
 - [x] III. Каркас Flask, шаблони Jinja2, обробка форм
-- [ ] IV. База даних SQLite (Read, Create)
+- [x] IV. База даних SQLite (Read, Create)
 - [ ] V. CRUD, авторизація, хешування паролів
 - [ ] VI. Деплой на PythonAnywhere
+
+## База даних
+
+| Таблиця | Призначення | Зв'язки |
+|---|---|---|
+| `categories` | категорії меню | — |
+| `menu_items` | позиції меню | `category_id` → `categories.id` |
+| `users` | користувачі, пароль зберігається як хеш | — |
+| `reservations` | бронювання столиків | `user_id` → `users.id` |
+
+Усі запити параметризовані (`?`), тому введення користувача не потрапляє в текст SQL.
+
+Тестові акаунти (запрацюють на етапі V): `admin@coffee.local` / `admin123`, `olena@example.com` / `olena123`.

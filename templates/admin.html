@@ -51,7 +51,7 @@
           <tr>
             <td>{{ photo('img/menu/' ~ item.image, '', 'thumb') }}</td>
             <td><strong>{{ item.name }}</strong></td>
-            <td class="muted">{{ get_category(item.category_id).name }}</td>
+            <td class="muted">{{ item.category_name }}</td>
             <td><strong>{{ item.price }} ₴</strong></td>
             <td class="muted">{{ item.volume }}</td>
             <td>
